@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Image Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #container {
+            position: relative;
+            text-align: center;
+            max-width: 800px;
+        }
+        #video {
+            width: 100%;
+            max-width: 100%;
+            border: 2px solid #333;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #filters {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 20px;
+        }
+        #filterSelect, .control {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 10px;
+        }
+        #titleInput {
+            width: 100%;
+            max-width: 300px;
+        }
+        #downloadButton {
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        <div id="filters">
+            <label for="filterSelect">Select Filter:</label>
+            <select id="filterSelect">
+                <option value="none">No Filter</option>
+                <option value="grayscale(100%)">Grayscale</option>
+                <option value="sepia(100%)">Sepia</option>
+                <option value="invert(100%)">Invert</option>
+                <option value="blur(4px)">Blur</option>
+                <option value="brightness(150%)">Brightness</option>
+            </select>
+            <label for="brightnessRange">Brightness:</label>
+            <input type="range" id="brightnessRange" class="control" min="0" max="200" value="100">
+            <label for="contrastRange">Contrast:</label>
+            <input type="range" id="contrastRange" class="control" min="0" max="200" value="100">
+            <label for="titleInput">Title:</label>
+            <input type="text" id="titleInput" placeholder="Enter Title">
+            <button id="takePhotoButton">Take Photo</button>
+            <button id="downloadButton">Download</button>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const filterSelect = document.getElementById('filterSelect');
+        const takePhotoButton = document.getElementById('takePhotoButton');
+        const brightnessRange = document.getElementById('brightnessRange');
+        const contrastRange = document.getElementById('contrastRange');
+        const titleInput = document.getElementById('titleInput');
+        const downloadButton = document.getElementById('downloadButton');
+        const canvasContext = canvas.getContext('2d');
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing the camera:', error);
+            }
+        }
+
+        function applyFilter() {
+            const selectedFilter = filterSelect.value;
+            canvas.style.filter = selectedFilter;
+        }
+
+        function captureFrame() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Draw text on the canvas
+            const titleText = titleInput.value;
+            canvasContext.font = '24px Arial';
+            canvasContext.fillStyle = 'white';
+            canvasContext.fillText(titleText, 20, 40);
+        }
+
+        function takePhoto() {
+            captureFrame();
+        }
+
+        function downloadImage() {
+            const dataURL = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'edited_image.png';
+            link.click();
+        }
+
+        function adjustImageProperties() {
+            const brightnessValue = brightnessRange.value;
+            const contrastValue = contrastRange.value;
+            canvas.style.filter = `brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+        }
+
+        takePhotoButton.addEventListener('click', takePhoto);
+        downloadButton.addEventListener('click', downloadImage);
+        filterSelect.addEventListener('change', applyFilter);
+        brightnessRange.addEventListener('input', adjustImageProperties);
+        contrastRange.addEventListener('input', adjustImageProperties);
+
+        initCamera();
+    </script>
+</body>
+</html>
